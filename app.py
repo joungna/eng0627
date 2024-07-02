@@ -6,6 +6,7 @@ from langchain_core.output_parsers import StrOutputParser
 from langchain_joungna.prompts import load_prompt
 from dotenv import load_dotenv
 from langchain import hub
+from langchain.prompts import PromptTemplate
 
 # API KEY 정보로드
 load_dotenv()
@@ -24,7 +25,7 @@ with st.sidebar:
     clear_btn = st.button("대화 초기화")
 
     selected_prompt = st.selectbox(
-        "번역모드를 선택해 주세요", ("기본번역모드", "잉한번역모드", "요약모드"), index=0
+        "번역모드를 선택해 주세요", ("영어번역모드", "잉한번역모드","중국어모드", "일본어모드"), index=0
     )
 
 
@@ -47,7 +48,7 @@ def create_chain(prompt_type):
         [
             (
                 "system",
-                "당신은 뛰어난 AI 영어와 한글번역가입니다. 다음의 영어 또는 한글문장을 한글 또는 영어로 번역해 주세요.",
+                "당신은 뛰어난 AI 영어와 한글번역가입니다. 다음의 영어 또는 한글문장을 한글 또는 영어로 번역해 주세요. 또한 영어문장에서 5개 단어를 무작위로 선정하여 한글 뜻을 적어주세요 그리고 반대 뜻의 영어 단어를 적어주세요. ",
             ),
             ("user", "#Question:\n{question}"),
         ]
@@ -55,9 +56,20 @@ def create_chain(prompt_type):
     if prompt_type == "잉한번역모드":
         # Windows 사용자 only: 인코딩을 cp949로 설정
         prompt = load_prompt("prompts/sns.yaml", encoding="utf-8")
-    elif prompt_type == "요약모드":
-        # 요약 프롬프트
-        prompt = hub.pull("teddynote/chain-of-density-korean:946ed62d")
+    if prompt_type == "중국어모드":
+        # 직접 프롬프트 템플릿 정의
+        map_template = """당신은 뛰어난 AI 중국어와 영어와 한글번역가입니다.  다음의 문서에서
+        {question}
+        영어 또는 한글문장에서 5개 단어를 무작위로 선정하여 한글 또는 영어로 그리고 동시에 중국어로도 번역해 주세요. 그리고 중국어 발음은 한글 자음모음으로 적어주세요:"""
+        prompt = PromptTemplate.from_template(map_template)
+    elif prompt_type == "일본어모드":
+        # 직접 프롬프트 템플릿 정의
+        map_template = """당신은 뛰어난 AI 일본어와 영어와 한글번역가입니다.  다음의 문서에서
+        {question}
+        영어 또는 한글문장에서 5개 단어를 무작위로 선정하여 한글 또는 영어로 그리고 동시에 일본어로도 번역해 주세요. 그리고 일본어 발음은 한글 자음모음으로 적어주세요:"""
+
+        # 템플릿을 사용하여 프롬프트 생성
+        prompt = PromptTemplate.from_template(map_template)
 
     # GPT
     llm = ChatOpenAI(model_name="gpt-4o", temperature=0)
@@ -104,40 +116,3 @@ if user_input:
     # 대화기록을 저장한다.
     add_message("user", user_input)
     add_message("assistant", ai_answer)
-    
-    
-    
-    
-    
-   
-# # 만약에 사용자 입력이 들어오면...
-# if user_input:
-    
-#         # 사이드바 생성
-#     with st.sidebar:
-#         # 초기화 버튼 생성
-#         clear_btn = st.button("대화 초기화")
-
-#         selected_prompt = st.selectbox(
-#             "언어를 선택해 주세요", ("영어번역모드", "일본어번역모드", "중국어번역모드"), index=0
-#         )
-#     # 사용자의 입력
-#     st.chat_message("user").write(user_input)
-#     # chain 을 생성
-#     chain = create_chain(selected_prompt)
-
-#     # 스트리밍 호출
-#     response = chain.stream({"question": user_input})
-#     with st.chat_message("assistant"):
-#         # 빈 공간(컨테이너)을 만들어서, 여기에 토큰을 스트리밍 출력한다.
-#         container = st.empty()
-
-#         ai_answer = ""
-#         for token in response:
-#             ai_answer += token
-#             container.markdown(ai_answer)
-
-#     # 대화기록을 저장한다.
-#     add_message("user", user_input)
-#     add_message("assistant", ai_answer)
-
