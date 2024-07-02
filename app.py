@@ -3,7 +3,7 @@ from langchain_core.messages.chat import ChatMessage
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai import ChatOpenAI
 from langchain_core.output_parsers import StrOutputParser
-from langchain_teddynote.prompts import load_prompt
+from langchain_joungna.prompts import load_prompt
 from dotenv import load_dotenv
 from langchain import hub
 
